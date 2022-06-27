@@ -1,0 +1,5 @@
+/sandbox
+/.idea
+/__pycache__
+config.py
+VeloDB.db
