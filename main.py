@@ -726,9 +726,12 @@ def callback_inline(call):
 
 
 def answer(call):
-	bot.answer_callback_query(call.id)
-	bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id)
-	bot.send_message(call.message.chat.id, "Переход:\n\n" + call.data)
+	try:
+		bot.answer_callback_query(call.id)
+		bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id)
+		bot.send_message(call.message.chat.id, "Переход:\n\n" + call.data)
+	except Exception as error:
+		print(error)
 
 
 bot.infinity_polling()
