@@ -14,11 +14,14 @@ def start(message):
 	c.execute("""
 	SELECT name 
 	FROM users 
-	WHERE telegram_id = ? AND admin = TRUE""", (message.from_user.id,))
-	name = c.fetchone()[0]
-	if len(name) > 0:
-		bot.send_message(message.chat.id, "Дороу, " + name + "!")
-		menu(message)
+	WHERE telegram_id = ? AND admin = 'TRUE'""", (message.from_user.id,))
+	name = c.fetchone()
+	if name is None:
+		bot.send_message(message.chat.id, "Я тебя не знаю.\nМне не разрешают общаться с незнакомцами.")
+	else:
+		if len(name[0]) > 0:
+			bot.send_message(message.chat.id, "Привет, " + name[0] + "!")
+			menu(message)
 	c.close()
 	db.close()
 
