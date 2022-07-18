@@ -1,6 +1,5 @@
 import telebot
 from telebot import types
-from threading import Thread
 import sqlite3
 
 import config
@@ -15,7 +14,7 @@ def start(message):
 	c.execute("""
 	SELECT name 
 	FROM users 
-	WHERE telegram_id = ? AND admin = 'TRUE'""", (message.from_user.id,))
+	WHERE telegram_id = ? AND admin = TRUE""", (message.from_user.id,))
 	name = c.fetchone()[0]
 	if len(name) > 0:
 		bot.send_message(message.chat.id, "Дороу, " + name + "!")
@@ -109,8 +108,21 @@ def long_info(message):
 	ORDER BY number
 	""")
 	table_velo = c.fetchall()
+	text_count = ""
+	if len(table_velo) > 0:
+		text_count = "Всего велосипедов: " + str(len(table_velo)) + "\n"
+		good = 0
+		bad = 0
+		for row in table_velo:
+			if row[3] == 1:
+				good += 1
+			else:
+				bad += 1
+		text_count += "На ходу: " + str(good) + "\n"
+		text_count += "Сломаны: " + str(bad) + "\n\n"
 	c.close()
 	db.close()
+	bot.send_message(message.chat.id, text_count)
 
 	if len(table_velo) > 0:
 		text = ""
@@ -187,8 +199,8 @@ def broken(message):
 	c.close()
 	db.close()
 
+	text_info = ""
 	if len(table_velo) > 0:
-		text_info = ""
 		for row_velo in table_velo:
 			id_velo = row_velo[0]
 			vin = row_velo[2]
@@ -566,32 +578,36 @@ def finished_problems(message):
 	text = "Нет данных"
 	db = sqlite3.connect('VeloDB.db', check_same_thread=False)
 	c = db.cursor()
-	c.execute("""
-		SELECT bikes.number, problems.comment, problems.date_start, problems.date_finish
-		FROM bikes, problems
-		WHERE bikes.id = problems.id_velo AND problems.status = FALSE
-		ORDER BY bikes.number
-		""")
-	table = c.fetchall()
-	if len(table) > 0:
-		text = ""
-		for row in table:
-			num = str(row[0])
-			comment = str(row[1])
-			date_start = str(row[2])
-			date_finish = str(row[3])
-			text += f'{num} {comment} {date_start} -> {date_finish}\n'
-	c.close()
-	db.close()
-	bot.send_message(message.chat.id, text)
+	try:
+		c.execute("""
+			SELECT bikes.number, problems.comment, problems.date_start, problems.date_finish
+			FROM bikes, problems
+			WHERE bikes.id = problems.id_velo AND problems.status = FALSE
+			ORDER BY problems.date_finish, bikes.number
+			""")
+		table = c.fetchall()
+		if len(table) > 0:
+			text = ""
+			for row in table:
+				num = str(row[0])
+				comment = str(row[1])
+				date_start = str(row[2])
+				date_finish = str(row[3])
+				text += f'{num} {comment} {date_start} -> {date_finish}\n'
+	except sqlite3.Error as error:
+		print(error)
+	finally:
+		c.close()
+		db.close()
+		bot.send_message(message.chat.id, text)
 
-	markup = types.InlineKeyboardMarkup(row_width=1)
-	buttons = [
-		types.InlineKeyboardButton("Назад", callback_data="/problem"),
-		types.InlineKeyboardButton("Главное меню", callback_data="/menu")
-	]
-	markup.add(*buttons)
-	bot.send_message(message.chat.id, "Завершённые неисправности", reply_markup=markup)
+		markup = types.InlineKeyboardMarkup(row_width=1)
+		buttons = [
+			types.InlineKeyboardButton("Назад", callback_data="/problem"),
+			types.InlineKeyboardButton("Главное меню", callback_data="/menu")
+		]
+		markup.add(*buttons)
+		bot.send_message(message.chat.id, "Завершённые неисправности", reply_markup=markup)
 
 
 @bot.message_handler(commands=['add_user'])
