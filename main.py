@@ -741,4 +741,4 @@ def answer(call):
 		print(error)
 
 
-bot.infinity_polling()
+bot.polling(none_stop=True, interval=0)
