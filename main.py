@@ -1,3 +1,6 @@
+import pathlib
+import sys
+
 import telebot
 from telebot import types
 import sqlite3
@@ -5,11 +8,12 @@ import sqlite3
 import config
 
 bot = telebot.TeleBot(config.botToken)
+script_path = pathlib.Path(sys.argv[0]).parent
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
-	db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+	db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 	c = db.cursor()
 	c.execute("""
 	SELECT name 
@@ -56,7 +60,7 @@ def velo(message):
 @bot.message_handler(commands=['short_info'])
 def short_info(message):
 	text = "Нет велосипедов"
-	db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+	db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 	c = db.cursor()
 	c.execute("""
 	SELECT number, VIN, condition 
@@ -103,7 +107,7 @@ def short_info(message):
 @bot.message_handler(commands=['long_info'])
 def long_info(message):
 	text = "Нет велосипедов"
-	db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+	db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 	c = db.cursor()
 	c.execute("""
 	SELECT id, number, VIN, condition 
@@ -141,7 +145,7 @@ def long_info(message):
 			elif row_velo[3] == 3:
 				cond = "сломан"
 			text += num + " " + vin + " " + cond + "\n"
-			db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+			db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 			c = db.cursor()
 			c.execute("""
 			SELECT comment
@@ -167,7 +171,7 @@ def long_info(message):
 @bot.message_handler(commands=['broken'])
 def broken(message):
 	text_count = "Нет велосипедов"
-	db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+	db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 	c = db.cursor()
 	c.execute("""
 		SELECT number, VIN, condition 
@@ -190,7 +194,7 @@ def broken(message):
 	db.close()
 	bot.send_message(message.chat.id, text_count)
 
-	db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+	db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 	c = db.cursor()
 	c.execute("""
 		SELECT id, number, VIN 
@@ -208,7 +212,7 @@ def broken(message):
 			id_velo = row_velo[0]
 			vin = row_velo[2]
 			text_info += f'<b>{vin}</b>\n'
-			db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+			db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 			c = db.cursor()
 			c.execute("""
 				SELECT comment
@@ -270,7 +274,7 @@ def add_velo_send(message):
 		try:
 			for velo in velo_list:
 				temp = velo.split()
-				db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+				db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 				c = db.cursor()
 				c.execute("""
 				INSERT INTO bikes (
@@ -312,7 +316,7 @@ def del_velo_send(message):
 		velo_list = message.text.split()
 		try:
 			for velo in velo_list:
-				db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+				db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 				c = db.cursor()
 				c.execute("""
 				DELETE FROM bikes
@@ -344,7 +348,7 @@ def edit_vin_velo_send(message):
 		try:
 			for velo in velo_list:
 				temp = velo.split(" ")
-				db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+				db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 				c = db.cursor()
 				c.execute("""
 				UPDATE bikes
@@ -394,7 +398,7 @@ def edit_status_velo_send(message):
 		try:
 			for velo in velo_list:
 				temp = velo.split(" ")
-				db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+				db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 				c = db.cursor()
 				c.execute("""
 				UPDATE bikes
@@ -438,7 +442,7 @@ def add_problem_send(message):
 		try:
 			for velo in velo_list:
 				temp = velo.split(" ", 1)
-				db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+				db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 				c = db.cursor()
 				c.execute("""
 				INSERT INTO problems (
@@ -508,7 +512,7 @@ def del_problem_send(message):
 		velo = message.text
 		text = "Нет данных"
 		try:
-			db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+			db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 			c = db.cursor()
 			c.execute("""
 			SELECT id, comment, date_start
@@ -534,7 +538,7 @@ def del_problem_finish_send(message):
 		problems = message.text.split()
 		try:
 			for problem in problems:
-				db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+				db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 				c = db.cursor()
 				c.execute("""
 				UPDATE problems
@@ -579,7 +583,7 @@ def del_problem_finish_send(message):
 @bot.message_handler(commands=['finished_problems'])
 def finished_problems(message):
 	text = "Нет данных"
-	db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+	db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 	c = db.cursor()
 	try:
 		c.execute("""
@@ -631,7 +635,7 @@ def add_user(message):
 def add_user_send(message):
 	user = message.text.split(" ", 1)
 	try:
-		db = sqlite3.connect('VeloDB.db', check_same_thread=False)
+		db = sqlite3.connect(script_path / 'VeloDB.db', check_same_thread=False)
 		c = db.cursor()
 		c.execute("""
 		INSERT INTO users (
